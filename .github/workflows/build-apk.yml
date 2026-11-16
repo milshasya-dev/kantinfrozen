@@ -19,12 +19,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 3. Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.2'
-
-      - name: 4. Generate Native Android Project & Download App Icon
+      - name: 3. Generate Native Android Project & Compile APK
         run: |
           mkdir -p android-app/app/src/main/java/com/kantin/ai
           mkdir -p android-app/app/src/main/res/xml
@@ -34,7 +29,7 @@ jobs:
           # Salin index.html ke dalam aset lokal APK
           cp index.html android-app/app/src/main/assets/index.html
 
-          # Download ikon aplikasi baru (https://iili.io/CSCl9SI.png)
+          # Download ikon aplikasi dari URL Anda
           curl -L "https://iili.io/CSCl9SI.png" -o android-app/app/src/main/res/drawable/ic_launcher.png
 
           # 1. Buat settings.gradle
@@ -102,7 +97,7 @@ jobs:
           }
           EOF
 
-          # 5. Buat file_paths.xml untuk izin unduh/share file laporan
+          # 5. Buat file_paths.xml untuk izin file
           cat << 'EOF' > android-app/app/src/main/res/xml/file_paths.xml
           <?xml version="1.0" encoding="utf-8"?>
           <paths>
@@ -110,7 +105,7 @@ jobs:
           </paths>
           EOF
 
-          # 6. Buat AndroidManifest.xml (Nama aplikasi: KANTIN AI, Warna Tema #0b1120)
+          # 6. Buat AndroidManifest.xml (Nama: KANTIN AI, Tema #0b1120)
           cat << 'EOF' > android-app/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -148,7 +143,7 @@ jobs:
           </manifest>
           EOF
 
-          # 7. Buat MainActivity.java (WebView Full Screen & Jembatan PDF/Download)
+          # 7. Buat MainActivity.java
           cat << 'EOF' > android-app/app/src/main/java/com/kantin/ai/MainActivity.java
           package com.kantin.ai;
 
@@ -198,7 +193,7 @@ jobs:
                   webView.addJavascriptInterface(new WebAppInterface(), "AndroidApp");
 
                   // GANTI URL DI BAWAH INI DENGAN LINK GITHUB PAGES ANDA
-                  webView.loadUrl("https://milshasya-dev.github.io/kantinmmufrozen/?v=" + System.currentTimeMillis());
+                  webView.loadUrl("https://milshasya-dev.github.io/kantinfrozen/?v=" + System.currentTimeMillis());
               }
 
               public class WebAppInterface {
@@ -245,13 +240,13 @@ jobs:
           }
           EOF
 
-      - name: 5. Compile APK dengan Gradle
-        working-directory: ./android-app
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          # 8. Generate gradle wrapper secara lokal di dalam folder proyek agar file gradlew tersedia
+          cd android-app
+          gradle wrapper --gradle-version 8.5
+          chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: 6. Upload File APK Siap Download
+      - name: 4. Upload File APK Siap Download
         uses: actions/upload-artifact@v4
         with:
           name: KANTIN-AI-APK
